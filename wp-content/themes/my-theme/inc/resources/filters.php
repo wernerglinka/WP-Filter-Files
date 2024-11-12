@@ -18,7 +18,6 @@ $authors = $args['authors'] ?? array();
 <aside class="resources-filters">
     <!-- Search form -->
     <form action="<?php echo esc_url(get_permalink()); ?>" method="get" class="keyword-search">
-        <input type="hidden" name="resources_nonce" value="<?php echo wp_create_nonce('resources_filter'); ?>">
         <label for="keyword-search"><?php esc_html_e('Search Keywords', 'rde01'); ?></label>
         <div class="input-wrapper">
             <input type="text" 
@@ -26,10 +25,19 @@ $authors = $args['authors'] ?? array();
                 name="keyword-search" 
                 class="keyword-search"
                 value="<?php echo esc_attr($params['keyword-search'] ?? ''); ?>"
+                placeholder="<?php esc_attr_e('Search resources...', 'rde01'); ?>"
             >
+
             <?php
-              // Add hidden inputs for existing parameters
-              foreach (array('category', 'auth', 'type') as $param) {
+              // Always include the nonce
+              printf(
+                '<input type="hidden" name="resources_nonce" value="%s">',
+                wp_create_nonce('resources_filter')
+              );
+
+              // Add hidden inputs for any active filters
+              $filter_params = array('category', 'auth', 'type', 'paged');
+              foreach ($filter_params as $param) {
                 if (!empty($params[$param])) {
                   printf(
                     '<input type="hidden" name="%s" value="%s">',
@@ -39,6 +47,7 @@ $authors = $args['authors'] ?? array();
                 }
               }
             ?>
+
             <button type="submit" class="button inverted">
                 <?php
                   $icon_path = get_template_directory() . '/icons/search.svg';

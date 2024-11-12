@@ -30,6 +30,9 @@ function get_filtered_url($new_params = array())
     $current_params['type'] = sanitize_text_field($_GET['type']);
   }
 
+  // Always add nonce
+  $current_params['resources_nonce'] = wp_create_nonce('resources_filter');
+
   // Merge with new parameters (new ones will override existing ones)
   $params = array_merge($current_params, $new_params);
 
@@ -352,32 +355,23 @@ function print_categories_list($categories, $level = 0)
   $available = check_available_results(get_sub_field('resource_types'), $current_filters);
 
   if ($level === 0) {
-    // For "All Categories" link, maintain all parameters except category
-    $current_params = array();
-    if (isset($_GET['auth'])) {
-      $current_params['auth'] = $_GET['auth'];
-    }
-    if (isset($_GET['keyword-search'])) {
-      $current_params['keyword-search'] = $_GET['keyword-search'];
-    }
-    if (isset($_GET['type'])) {
-      $current_params['type'] = $_GET['type'];
-    }
-    $url = add_query_arg($current_params, get_permalink());
-    echo '<li><a href="' . esc_url($url) . '">All Categories</a></li>';
+    // "All Categories" link using get_filtered_url
+    $url = get_filtered_url(array('category' => null));
+    echo '<li><a href="' . esc_url($url) . '">'
+      . esc_html__('All Categories', 'rde01') . '</a></li>';
   }
 
   foreach ($categories as $category) {
     if ($category->slug !== 'uncategorized') {
       $indent = str_repeat('&nbsp;', $level * 4);
 
-      // Check if this category would yield results
       if (in_array($category->slug, $available['categories'])) {
         $url = get_filtered_url(array('category' => $category->slug));
-        echo '<li>' . $indent . '<a href="' . esc_url($url) . '">' . esc_html($category->name) . '</a></li>';
+        echo '<li>' . $indent . '<a href="' . esc_url($url) . '">'
+          . esc_html($category->name) . '</a></li>';
       } else {
-        // Add disabled state for categories with no results
-        echo '<li class="disabled">' . $indent . '<span>' . esc_html($category->name) . '</span></li>';
+        echo '<li class="disabled">' . $indent . '<span>'
+          . esc_html($category->name) . '</span></li>';
       }
 
       if (!empty($category->children)) {
@@ -402,41 +396,22 @@ function print_authors_list($authors)
 
   $available = check_available_results(get_sub_field('resource_types'), $current_filters);
 
-  // For "All Authors" option, maintain all parameters except auth
-  $current_params = array();
-  if (isset($_GET['category'])) {
-    $current_params['category'] = $_GET['category'];
-  }
-  if (isset($_GET['keyword-search'])) {
-    $current_params['keyword-search'] = $_GET['keyword-search'];
-  }
-  if (isset($_GET['type'])) {
-    $current_params['type'] = $_GET['type'];
-  }
-  $url = add_query_arg($current_params, get_permalink());
-  echo '<li><a href="' . esc_url($url) . '">All Authors</a></li>';
+  // "All Authors" link using get_filtered_url
+  $url = get_filtered_url(array('auth' => null));
+  echo '<li><a href="' . esc_url($url) . '">'
+    . esc_html__('All Authors', 'rde01') . '</a></li>';
 
   foreach ($authors as $author) {
     if ($author['authorName'] !== 'none') {
-      // Check if this author would yield results
       if (in_array($author['authorID'], $available['authors'])) {
         $url = get_filtered_url(array('auth' => $author['authorID']));
-        echo '<li><a href="' . esc_url($url) . '">' . esc_html($author['authorName']) . '</a></li>';
+        echo '<li><a href="' . esc_url($url) . '">'
+          . esc_html($author['authorName']) . '</a></li>';
       } else {
-        // Add disabled state for authors with no results
-        echo '<li class="disabled"><span>' . esc_html($author['authorName']) . '</span></li>';
+        echo '<li class="disabled"><span>'
+          . esc_html($author['authorName']) . '</span></li>';
       }
     }
-  }
-
-  // Debug output
-  if (WP_DEBUG && current_user_can('manage_options')) {
-    echo '<pre>';
-    echo 'Available Authors: ';
-    print_r($available['authors']);
-    echo "\nCurrent Authors: ";
-    print_r(array_column($authors, 'authorID'));
-    echo '</pre>';
   }
 }
 
@@ -461,7 +436,8 @@ function trunctate_text($string, $length)
 }
 
 /**
- * Function to print a list of resource types
+ * Function to print a list of all resource types
+ * @param array $selected_types
  */
 function print_types_list($selected_types)
 {
@@ -474,19 +450,9 @@ function print_types_list($selected_types)
 
   $available = check_available_results(get_sub_field('resource_types'), $current_filters);
 
-  // Add "All" option
-  $current_params = array();
-  if (isset($_GET['category'])) {
-    $current_params['category'] = $_GET['category'];
-  }
-  if (isset($_GET['auth'])) {
-    $current_params['auth'] = $_GET['auth'];
-  }
-  if (isset($_GET['keyword-search'])) {
-    $current_params['keyword-search'] = $_GET['keyword-search'];
-  }
-  $all_url = add_query_arg($current_params, get_permalink());
-  echo '<li><a href="' . esc_url($all_url) . '">' . esc_html__('All Types', 'rde01') . '</a></li>';
+  // "All Types" link using get_filtered_url
+  $url = get_filtered_url(array('type' => null));
+  echo '<li><a href="' . esc_url($url) . '">' . esc_html__('All Types', 'rde01') . '</a></li>';
 
   foreach ($selected_types as $post_type) {
     if (in_array($post_type, $available['types'])) {

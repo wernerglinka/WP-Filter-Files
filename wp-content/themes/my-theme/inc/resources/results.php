@@ -39,11 +39,13 @@ $paged = $params['paged'] ?? 1;
   <!-- Resource list -->
   <ul class="resources-list">
     <?php if ($query->have_posts()): ?>
-        <?php while ($query->have_posts()):
-          $query->the_post();
-          get_template_part('inc/resources/card');
-        endwhile; ?>
-        <?php wp_reset_postdata(); ?>
+      <?php
+      while ($query->have_posts()) {
+        $query->the_post();
+        get_template_part('inc/resources/card');
+      }
+      wp_reset_postdata();
+      ?>
     <?php else: ?>
         <li class="no-results">
             <?php esc_html_e('No resources found.', 'rde01'); ?>
